@@ -36,7 +36,7 @@ public class AiServiceClient {
         }
     }
 
-    // ✅ Generate API (POST)
+    //  Generate API (POST)
     public String generateText(String input) {
         try {
             URL url = new URL(BASE_URL + "/generate");
@@ -73,11 +73,11 @@ public class AiServiceClient {
 
         } catch (Exception e) {
             System.out.println("Generate Error: " + e.getMessage());
-            return null; // 🔴 required
+            return null; //  required
         }
     }
 
-    // ✅ MAIN METHOD (fixes your error)
+    // MAIN METHOD (fixes your error)
     public static void main(String[] args) {
 
         AiServiceClient client = new AiServiceClient();
