@@ -1,65 +1,81 @@
 from flask import Flask, request, jsonify
+import bleach
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import bleach
 
 app = Flask(__name__)
 
-# ✅ Step 1: Setup rate limiter
+# Rate Limiter
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["30 per minute"]
 )
 
-# 🚨 Step 2: Prompt injection detection keywords
+# Prompt Injection Patterns
 BLOCKED_PATTERNS = [
     "ignore previous instructions",
-    "system prompt",
-    "act as",
-    "bypass",
-    "jailbreak"
+    "developer mode",
+    "system prompt"
 ]
 
-# ✅ Step 3: Input sanitisation function
-def sanitize_input(user_input):
-    # Remove HTML
-    cleaned = bleach.clean(user_input, strip=True)
+# Security Headers
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    return response
 
-    # Convert to lowercase for checking
-    lower_input = cleaned.lower()
+# Home route
+@app.route("/")
+def home():
+    return "Flask Server Running"
 
-    # Detect prompt injection
-    for pattern in BLOCKED_PATTERNS:
-        if pattern in lower_input:
-            return None
-
-    return cleaned
-
-# ✅ Step 4: API route
-@app.route("/ask", methods=["POST"])
-@limiter.limit("30 per minute")  # limit per endpoint
-def ask():
-    data = request.get_json()
-
-    if not data or "prompt" not in data:
-        return jsonify({"error": "Missing prompt"}), 400
-
-    user_input = data["prompt"]
-
-    # Sanitize input
-    safe_input = sanitize_input(user_input)
-
-    if not safe_input:
-        return jsonify({"error": "Unsafe input detected"}), 400
-
-    # Dummy response (replace with AI call)
+# Health check route
+@app.route("/health")
+def health():
     return jsonify({
-        "message": "Safe input received",
-        "cleaned_input": safe_input
+        "status": "success",
+        "message": "Flask server is working"
     })
 
-# ✅ Run app
-if __name__ == "__main__":
-    app.run(debug=True)
+# Generate route
+@app.route("/generate", methods=["POST"])
+def generate():
 
+    data = request.get_json()
+
+    # Empty Input Check
+    if not data:
+        return jsonify({
+            "error": "No input data provided"
+        }), 400
+
+    text = data.get("text", "")
+
+    # Empty Text Check
+    if not text.strip():
+        return jsonify({
+            "error": "Empty input"
+        }), 400
+
+    # Sanitize Input
+    clean_text = bleach.clean(text)
+
+    # Prompt Injection Check
+    for pattern in BLOCKED_PATTERNS:
+        if pattern in clean_text.lower():
+            return jsonify({
+                "error": "Prompt injection detected"
+            }), 400
+
+    response = f"AI Response for: {clean_text}"
+
+    return jsonify({
+        "input": clean_text,
+        "response": response
+    })
+
+# Main
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
