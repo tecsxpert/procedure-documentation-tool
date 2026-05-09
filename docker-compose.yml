@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: procedure-postgres
+    environment:
+      POSTGRES_DB: proceduredb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    container_name: procedure-redis
+    ports:
+      - "6379:6379"
+
+  ai-service:
+    build: ./ai-service
+    container_name: ai-service
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  backend:
+    build: ./backend
+    container_name: procedure-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+      - ai-service
+
+  frontend:
+    build: ./frontend
+    container_name: procedure-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend

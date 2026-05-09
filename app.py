@@ -32,6 +32,7 @@ def sanitize_input(text):
     """
     Cleans HTML/JS from input
     """
+
     if not isinstance(text, str):
         return ""
 
@@ -44,6 +45,7 @@ def detect_prompt_injection(text):
     """
     Detect suspicious prompt injection attempts
     """
+
     lower_text = text.lower()
 
     for pattern in BLOCKED_PATTERNS:
@@ -58,9 +60,6 @@ def detect_prompt_injection(text):
 # =========================
 
 def generate_description(text):
-    """
-    Generate detailed procedure description
-    """
 
     response = f"""
 Procedure Description
@@ -88,9 +87,6 @@ The procedure should complete successfully with verified output.
 
 
 def generate_recommendation(text):
-    """
-    Generate recommendations
-    """
 
     response = f"""
 Recommendations for Procedure
@@ -115,9 +111,6 @@ Quality Improvements:
 
 
 def generate_report(text):
-    """
-    Generate structured report
-    """
 
     response = {
         "summary": f"Procedure analysis completed for: {text}",
@@ -159,9 +152,22 @@ def home():
     })
 
 
-# -------------------------
+# =========================
+# HEALTH ENDPOINT
+# =========================
+
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "UP",
+        "service": "AI Service"
+    })
+
+
+# =========================
 # DESCRIBE ENDPOINT
-# -------------------------
+# =========================
+
 @app.route("/describe", methods=["POST"])
 @limiter.limit("10 per minute")
 def describe():
@@ -186,9 +192,10 @@ def describe():
     })
 
 
-# -------------------------
+# =========================
 # RECOMMEND ENDPOINT
-# -------------------------
+# =========================
+
 @app.route("/recommend", methods=["POST"])
 @limiter.limit("10 per minute")
 def recommend():
@@ -213,9 +220,10 @@ def recommend():
     })
 
 
-# -------------------------
+# =========================
 # GENERATE REPORT ENDPOINT
-# -------------------------
+# =========================
+
 @app.route("/generate-report", methods=["POST"])
 @limiter.limit("10 per minute")
 def generate_report_endpoint():
@@ -243,8 +251,9 @@ def generate_report_endpoint():
 # =========================
 
 if __name__ == "__main__":
+
     app.run(
         host="0.0.0.0",
-        port=8080,
+        port=5000,
         debug=True
     )

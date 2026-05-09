@@ -1,0 +1,7 @@
+flask
+requests
+redis
+python-dotenv
+groq
+flask-limiter
+bleach
